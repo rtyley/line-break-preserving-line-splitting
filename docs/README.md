@@ -32,9 +32,13 @@ libraryDependencies += "com.madgag" %% "line-break-preserving-line-splitting" % 
 ```scala mdoc
 import com.madgag.linesplitting._
 
-val splitLines = new LineBreakPreservingIterator(
-  new java.io.StringReader("Foo\nBar\rBoo")
-).toSeq
+val splitLines = {
+  val reader: java.io.Reader = new java.io.StringReader("Foo\nBar\rBoo")
+
+  val iter = new LineBreakPreservingIterator(reader)
+  
+  iter.toSeq
+}.toSeq
 
 splitLines.map(_.replace("\n", "[LF]").replace("\r", "[CR]"))
 ```

@@ -28,16 +28,25 @@ lazy val lineSplitting = project.in(file("line-splitting")).settings(
 lazy val docs = project.in(file("line-splitting-generated-docs")) // important: it must not be docs/
   .dependsOn(lineSplitting)
   .enablePlugins(MdocPlugin).settings(
-   mdocVariables := Map(
-     "VERSION" -> version.value
-   )
-   )
+    mdocOut := (ThisBuild / baseDirectory).value,
+    mdocVariables := Map(
+      "VERSION" -> version.value
+    ),
+    Test / test := Def.taskDyn {
+      val result = (Test / test).value
+      Def.task {
+        val _ = mdoc.toTask("").value
+        result
+      }
+    }.value
+  )
 
 import ReleaseTransformations._
 
 lazy val lineSplittingRoot = (project in file("."))
   .aggregate(
-    lineSplitting
+    lineSplitting,
+    docs
   )
   .settings(baseSettings).settings(
   publishArtifact := false,

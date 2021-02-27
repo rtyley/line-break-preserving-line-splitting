@@ -1,5 +1,7 @@
 # line-break-preserving-line-splitting
 
+[![Build Status](https://travis-ci.com/rtyley/line-break-preserving-line-splitting.svg?branch=main)](https://travis-ci.com/rtyley/line-break-preserving-line-splitting)
+
 ### Features
 
 * Streams from a `java.io.Reader`, so **can process very large files**
@@ -19,8 +21,10 @@ wanted to retain the line-breaks, I'd probably have used
 
 ### Installation
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.madgag/line-break-preserving-line-splitting_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.madgag/line-break-preserving-line-splitting_2.13/)
+
 ```scala
-libraryDependencies += "com.madgag" %% "line-break-preserving-line-splitting" % "0.1.1-SNAPSHOT"
+libraryDependencies += "com.madgag" %% "line-break-preserving-line-splitting" % "[version]"
 ```
 
 ### Example usage
@@ -28,10 +32,9 @@ libraryDependencies += "com.madgag" %% "line-break-preserving-line-splitting" % 
 ```scala
 import com.madgag.linesplitting._
 
-val reader = new java.io.StringReader("Foo\nBar\rBoo")
-// reader: java.io.StringReader = java.io.StringReader@6bbbc429
-
-val splitLines = new LineBreakPreservingIterator(reader).toSeq
+val splitLines = new LineBreakPreservingIterator(
+  new java.io.StringReader("Foo\nBar\rBoo")
+).toSeq
 // splitLines: Seq[String] = List(
 //   """Foo
 // """,

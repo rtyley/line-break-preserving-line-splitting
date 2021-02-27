@@ -57,39 +57,29 @@ class LineBreakPreservingIterator(reader: Reader, bufferSize: Int = 0x800) exten
 
   /*
    * Must repeatedly fill until it finds a newline or the endOfStream
-   *
+   * // case A "LBX visible in readable bytes before buffer edge"
    */
-  override def next(): String = {
-    val foundLine:Option[String] = findLBX() // case A "LBX visible in readable bytes before buffer edge"
-    val result = foundLine.getOrElse {
-      if (readPointer <= writePointer) caseB_readBeforeOrEqualToWritePointer() else caseC_writeBeforeReadPointer()
-    }
-    result
+  override def next(): String = findLBX().getOrElse {
+    if (readPointer <= writePointer) caseB_readBeforeOrEqualToWritePointer() else caseC_writeBeforeReadPointer()
   }
 
-  // case C "read is before or equal to write in the buffer, with no LBX visible in readable bytes"
+  // case B "read is before or equal to write in the buffer, with no LBX visible in readable bytes"
   // @tailrec
   private def caseB_readBeforeOrEqualToWritePointer(): String = {
     val fillResult = fill()
-    if (fillResult.endOfStream) {
-      val str = new String(buf, readPointer, writePointer - readPointer)
-      readPointer = writePointer
-      str
-    } else {
-      val fl: Option[String] = findLBX()
-      fl.getOrElse {
-        if (fillResult.filledToBufferEdge) caseC_writeBeforeReadPointer() else caseB_readBeforeOrEqualToWritePointer()
-      }
+    if (fillResult.endOfStream) grabUpTo(writePointer) else findLBX().getOrElse {
+      if (fillResult.filledToBufferEdge) caseC_writeBeforeReadPointer() else caseB_readBeforeOrEqualToWritePointer()
     }
   }
 
-  private def startStringBuilderAndLoopReadPointerToBufferStart(): StringBuilder = {
+  // case C "read is ahead of write in the buffer, with no LBX visible before buffer edge"
+  private def caseC_writeBeforeReadPointer(): String = {
     val stringBuilder = new StringBuilder()
-    loopRound(stringBuilder)
-    stringBuilder
+    rollOverBufferEndToReturnToBufferStartWith(stringBuilder)
+    searchingForLBXWith(stringBuilder)
   }
 
-  private def loopRound(stringBuilder: StringBuilder): Unit = {
+  private def rollOverBufferEndToReturnToBufferStartWith(stringBuilder: StringBuilder): Unit = {
     val charsRemaining = bufferSize - readPointer
     val numCharsToClone = Math.min(MaxLBSize, charsRemaining)
     stringBuilder.appendAll(buf, readPointer, charsRemaining - numCharsToClone)
@@ -98,23 +88,18 @@ class LineBreakPreservingIterator(reader: Reader, bufferSize: Int = 0x800) exten
     writePointer = numCharsToClone
   }
 
-  // case C "read is ahead of write in the buffer, with no LBX visible before buffer edge"
-  private def caseC_writeBeforeReadPointer(): String = {
-    stringBuilderSearching(startStringBuilderAndLoopReadPointerToBufferStart())
-  }
-
   private def grabUpTo(startOfNextLine: Int): String = {
     val str = new String(buf, readPointer, startOfNextLine - readPointer)
     readPointer = startOfNextLine
     str
   }
 
-  def findLBX(): Option[String] = findLBXyeah(readPointer)
+  def findLBX(): Option[String] = findLBXStartingReadFrom(readPointer)
 
   private def findLBXWith(stringBuilder: StringBuilder): Option[String] =
-    findLBXyeah(0, x => stringBuilder.append(x).result())
+    findLBXStartingReadFrom(0, x => stringBuilder.append(x).result())
 
-  def findLBXyeah(startI: Int, cuppa: String => String = identity): Option[String] = {
+  def findLBXStartingReadFrom(startI: Int, concludeLBXSearchWithFinalChunk: String => String = identity): Option[String] = {
     var i = startI // readPointer?
     val searchBoundary = (if (writePointer==0) bufferSize else writePointer) - 1
     val boundaryFor2CharLB = searchBoundary - 1
@@ -122,41 +107,28 @@ class LineBreakPreservingIterator(reader: Reader, bufferSize: Int = 0x800) exten
     while (i < searchBoundary) {
       val c = buf(i)
       if (c == '\r' && buf(i+1) == '\n') {
-        return if (i < boundaryFor2CharLB) Some(cuppa(grabUpTo(i + 2))) else None // Need to ensure there's a buffer byte...
+        return if (i < boundaryFor2CharLB) Some(concludeLBXSearchWithFinalChunk(grabUpTo(i + 2))) else None // Need to ensure there's a buffer byte...
       } else if (c == '\n' || c == '\r') {
-        return Some(cuppa(grabUpTo(i + 1)))
+        return Some(concludeLBXSearchWithFinalChunk(grabUpTo(i + 1)))
       }
       i += 1
     }
     None
   }
 
-
-  def stringBuilderSearching(stringBuilder: StringBuilder): String = {
+  // @tailrec
+  private def searchingForLBXWith(stringBuilder: StringBuilder): String = {
     val fillResult = fill()
     if (fillResult.endOfStream) {
       stringBuilder.appendAll(buf, readPointer, writePointer - readPointer)
       readPointer = writePointer
       stringBuilder.result()
-    } else {
-      val fl: Option[String] = findLBXWith(stringBuilder)
-      fl.getOrElse {
-        if (fillResult.filledToBufferEdge) {
-          loopRound(stringBuilder)
-        }
-        stringBuilderSearching(stringBuilder)
+    } else findLBXWith(stringBuilder).getOrElse {
+      if (fillResult.filledToBufferEdge) {
+        rollOverBufferEndToReturnToBufferStartWith(stringBuilder)
       }
+      searchingForLBXWith(stringBuilder)
     }
-  }
-
-  def findLineBreak(): Option[Int] = {
-    var i = readPointer
-    while (i < writePointer - 1) {
-      val c = buf(i)
-      if(c == '\n' || c == '\r') return Some(i)
-      i += 1
-    }
-    None
   }
 
   /*

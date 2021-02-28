@@ -64,11 +64,12 @@ class LineBreakPreservingIterator(reader: Reader, bufferSize: Int = 0x800) exten
   }
 
   // case B "read is before or equal to write in the buffer, with no LBX visible in readable bytes"
-  // @tailrec
+  @tailrec
   private def caseB_readBeforeOrEqualToWritePointer(): String = {
     val fillResult = fill()
-    if (fillResult.endOfStream) grabUpTo(writePointer) else findLBX().getOrElse {
-      if (fillResult.filledToBufferEdge) caseC_writeBeforeReadPointer() else caseB_readBeforeOrEqualToWritePointer()
+    if (fillResult.endOfStream) grabUpTo(writePointer) else findLBX() match {
+      case Some(line) => line
+      case None => if (fillResult.filledToBufferEdge) caseC_writeBeforeReadPointer() else caseB_readBeforeOrEqualToWritePointer()
     }
   }
 
@@ -77,6 +78,23 @@ class LineBreakPreservingIterator(reader: Reader, bufferSize: Int = 0x800) exten
     val stringBuilder = new StringBuilder()
     rollOverBufferEndToReturnToBufferStartWith(stringBuilder)
     searchingForLBXWith(stringBuilder)
+  }
+
+  @tailrec
+  private def searchingForLBXWith(stringBuilder: StringBuilder): String = {
+    val fillResult = fill()
+    if (fillResult.endOfStream) {
+      stringBuilder.appendAll(buf, readPointer, writePointer - readPointer)
+      readPointer = writePointer
+      stringBuilder.result()
+    } else findLBXWith(stringBuilder) match {
+      case Some(lineEndingWithLBX) => lineEndingWithLBX
+      case None =>
+        if (fillResult.filledToBufferEdge) {
+          rollOverBufferEndToReturnToBufferStartWith(stringBuilder)
+        }
+        searchingForLBXWith(stringBuilder)
+    }
   }
 
   private def rollOverBufferEndToReturnToBufferStartWith(stringBuilder: StringBuilder): Unit = {
@@ -116,37 +134,19 @@ class LineBreakPreservingIterator(reader: Reader, bufferSize: Int = 0x800) exten
     None
   }
 
-  // @tailrec
-  private def searchingForLBXWith(stringBuilder: StringBuilder): String = {
-    val fillResult = fill()
-    if (fillResult.endOfStream) {
-      stringBuilder.appendAll(buf, readPointer, writePointer - readPointer)
-      readPointer = writePointer
-      stringBuilder.result()
-    } else findLBXWith(stringBuilder).getOrElse {
-      if (fillResult.filledToBufferEdge) {
-        rollOverBufferEndToReturnToBufferStartWith(stringBuilder)
-      }
-      searchingForLBXWith(stringBuilder)
-    }
-  }
-
   /*
   Fill needs to block/loop until it either reaches endOfStream or reads at least one byte
    */
   @tailrec
-  private def fill(): FillResult = {
-    val bytesRead = reader.read(buf, writePointer, numBytesWeCouldAcceptInOneRead)
-    bytesRead match {
-      case -1 =>
-        endOfStream = true
-        FillResult(filledToBufferEdge=false, endOfStream = true)
-      case 0 =>
-        fill()
-      case _ =>
-        writePointer = (writePointer + bytesRead) % bufferSize // if we filled the buf, writePointer goes back to zero
-        FillResult(filledToBufferEdge = writePointer == 0, endOfStream = false)
-    }
+  private def fill(): FillResult = reader.read(buf, writePointer, numBytesWeCouldAcceptInOneRead) match {
+    case -1 =>
+      endOfStream = true // can we do better here?
+      FillResult(filledToBufferEdge=false, endOfStream = true)
+    case 0 =>
+      fill() // by contract, this method has to *change* state - can't come back with nothing changed
+    case positiveBytesRead =>
+      writePointer = (writePointer + positiveBytesRead) % bufferSize // if we filled the buf, writePointer goes back to zero
+      FillResult(filledToBufferEdge = writePointer == 0, endOfStream = false)
   }
 
 }

@@ -1,6 +1,6 @@
 sonatypeProfileName := "com.madgag"
 
-pomExtra in ThisBuild := (
+ThisBuild / pomExtra := (
   <url>https://github.com/rtyley/line-break-preserving-line-splitting</url>
     <developers>
       <developer>

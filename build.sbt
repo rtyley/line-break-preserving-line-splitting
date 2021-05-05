@@ -7,21 +7,22 @@ lazy val baseSettings = Seq(
     url("https://github.com/rtyley/line-break-preserving-line-splitting"),
     "scm:git:git@github.com:rtyley/line-break-preserving-line-splitting.git"
   )),
-  scalacOptions ++= Seq("-deprecation", "-Xlint", "-unchecked")
+  scalacOptions ++= Seq("-deprecation", "-unchecked")
 )
 
 name := "line-splitting-root"
 
 description := "A few odds and ends to replace mapViews"
 
-scalaVersion in ThisBuild := "2.13.5"
+ThisBuild / scalaVersion := "2.13.5"
 
 lazy val lineSplitting = project.in(file("line-splitting")).settings(
   baseSettings,
   name := "line-break-preserving-line-splitting",
+  crossScalaVersions := Seq(scalaVersion.value, "3.0.0-RC3"),
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "3.2.5" % Test,
-    "com.madgag" %% "scala-collection-plus" % "0.5" % Test
+    "org.scalatest" %% "scalatest" % "3.2.8" % Test,
+    "com.madgag" %% "scala-collection-plus" % "0.8" % Test
   )
 )
 
@@ -42,7 +43,7 @@ lazy val lineSplittingRoot = (project in file("."))
   publishArtifact := false,
   publish := {},
   publishLocal := {},
-  releaseCrossBuild := false, // true if you cross-build the project for multiple Scala versions
+  releaseCrossBuild := true, // true if you cross-build the project for multiple Scala versions
   releaseProcess := Seq[ReleaseStep](
     checkSnapshotDependencies,
     inquireVersions,
@@ -51,10 +52,12 @@ lazy val lineSplittingRoot = (project in file("."))
     setReleaseVersion,
     commitReleaseVersion,
     tagRelease,
-    releaseStepCommand("publishSigned"),
+    // For non cross-build projects, use releaseStepCommand("publishSigned")
+    releaseStepCommandAndRemaining("+publishSigned"),
     releaseStepCommand("sonatypeBundleRelease"),
     setNextVersion,
     commitNextVersion,
     pushChanges
   )
+
 )

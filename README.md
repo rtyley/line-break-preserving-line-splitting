@@ -22,8 +22,6 @@ wanted to retain the line-breaks, I'd probably have used
 
 ### Installation
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.madgag/line-break-preserving-line-splitting_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.madgag/line-break-preserving-line-splitting_2.13/)
-
 ```scala
 libraryDependencies += "com.madgag" %% "line-break-preserving-line-splitting" % "[version]"
 ```

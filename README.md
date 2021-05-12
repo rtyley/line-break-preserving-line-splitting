@@ -1,5 +1,6 @@
 # line-break-preserving-line-splitting
 
+[![line-break-preserving-line-splitting artifacts](https://index.scala-lang.org/rtyley/line-break-preserving-line-splitting/line-break-preserving-line-splitting/latest-by-scala-version.svg)](https://index.scala-lang.org/rtyley/line-break-preserving-line-splitting/line-break-preserving-line-splitting/)
 [![Build Status](https://travis-ci.com/rtyley/line-break-preserving-line-splitting.svg?branch=main)](https://travis-ci.com/rtyley/line-break-preserving-line-splitting)
 
 ### Features
@@ -42,7 +43,8 @@ val splitLines = {
 // splitLines: Seq[String] = List(
 //   """Foo
 // """,
-//   """Bar""",
+//   """Bar
+""",
 //   "Boo"
 // )
 

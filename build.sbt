@@ -19,10 +19,10 @@ ThisBuild / scalaVersion := "2.13.5"
 lazy val lineSplitting = project.in(file("line-splitting")).settings(
   baseSettings,
   name := "line-break-preserving-line-splitting",
-  crossScalaVersions := Seq(scalaVersion.value, "3.0.0-RC3"),
+  crossScalaVersions := Seq(scalaVersion.value, "3.0.0"),
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "3.2.8" % Test,
-    "com.madgag" %% "scala-collection-plus" % "0.8" % Test
+    "org.scalatest" %% "scalatest" % "3.2.9" % Test,
+    "com.madgag" %% "scala-collection-plus" % "0.9" % Test
   )
 )
 

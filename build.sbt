@@ -1,5 +1,5 @@
 lazy val baseSettings = Seq(
-  scalaVersion := "2.13.5",
+  scalaVersion := "2.13.6",
   organization := "com.madgag",
   licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
   publishTo := sonatypePublishToBundle.value,
@@ -14,7 +14,7 @@ name := "line-splitting-root"
 
 description := "A few odds and ends to replace mapViews"
 
-ThisBuild / scalaVersion := "2.13.5"
+ThisBuild / scalaVersion := "2.13.6"
 
 lazy val lineSplitting = project.in(file("line-splitting")).settings(
   baseSettings,

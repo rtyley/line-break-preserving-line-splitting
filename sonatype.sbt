@@ -1,5 +1,7 @@
 sonatypeProfileName := "com.madgag"
 
+ThisBuild/sonatypeCredentialHost := "s01.oss.sonatype.org"
+
 ThisBuild / pomExtra := (
   <url>https://github.com/rtyley/line-break-preserving-line-splitting</url>
     <developers>

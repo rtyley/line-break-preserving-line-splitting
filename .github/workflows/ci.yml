@@ -28,9 +28,3 @@ jobs:
         with:
           paths: "test-results/**/TEST-*.xml"
         if: always()
-      - name: Upload test summary
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-summary
-          path: test-summary.md
-        if: always()

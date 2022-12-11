@@ -12,3 +12,5 @@ project/plugins/project/
 
 *.class
 *.log
+
+test-results

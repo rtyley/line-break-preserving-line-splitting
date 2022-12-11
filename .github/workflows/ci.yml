@@ -22,4 +22,15 @@ jobs:
           java-version: 11
           cache: sbt
       - name: Build and Test
-        run: sbt -v test
+        run: sbt -v +test
+      - name: Test Summary
+        uses: test-summary/action@v2
+        with:
+          paths: "test-results/**/TEST-*.xml"
+        if: always()
+      - name: Upload test summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary
+          path: test-summary.md
+        if: always()

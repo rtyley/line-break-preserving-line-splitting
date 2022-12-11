@@ -23,6 +23,10 @@ lazy val lineSplitting = project.in(file("line-splitting")).settings(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.2.14" % Test,
     "com.madgag" %% "scala-collection-plus" % "0.11" % Test
+  ),
+  Test/testOptions += Tests.Argument(
+    TestFrameworks.ScalaTest,
+    "-u", s"test-results/scala-${scalaVersion.value}"
   )
 )
 

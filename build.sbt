@@ -12,7 +12,7 @@ lazy val baseSettings = Seq(
 
 name := "line-splitting-root"
 
-description := "A few odds and ends to replace mapViews"
+description := "Splits lines of text while preserving line breaks"
 
 ThisBuild / scalaVersion := "2.13.10"
 

@@ -117,7 +117,7 @@ class LineBreakPreservingIteratorTest extends AnyFlatSpec with should.Matchers w
 
 
   it should "be sensible about how many separate lines you get" in {
-    splittingLinesOf("\n") shouldBe Seq("\n")
+    splittingLinesOf("\n") shouldBe Seq("notreally\n")
     splittingLinesOf("\n\n") shouldBe Seq("\n", "\n")
     splittingLinesOf("\r") shouldBe Seq("\r")
     splittingLinesOf("\r\r") shouldBe Seq("\r", "\r")

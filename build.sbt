@@ -1,27 +1,20 @@
-lazy val baseSettings = Seq(
-  scalaVersion := "2.13.10",
-  organization := "com.madgag",
-  licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-  publishTo := sonatypePublishToBundle.value,
-  scmInfo := Some(ScmInfo(
-    url("https://github.com/rtyley/line-break-preserving-line-splitting"),
-    "scm:git:git@github.com:rtyley/line-break-preserving-line-splitting.git"
-  )),
-  scalacOptions ++= Seq("-deprecation", "-unchecked")
-)
+import ReleaseTransformations.*
+import sbtversionpolicy.withsbtrelease.ReleaseVersion
 
 name := "line-splitting-root"
 
 description := "Splits lines of text while preserving line breaks"
 
-ThisBuild / scalaVersion := "2.13.10"
+ThisBuild / scalaVersion := "2.13.16"
 
 lazy val lineSplitting = project.in(file("line-splitting")).settings(
-  baseSettings,
   name := "line-break-preserving-line-splitting",
-  crossScalaVersions := Seq(scalaVersion.value, "3.2.1"),
+  organization := "com.madgag",
+  licenses := Seq(License.Apache2),
+  scalacOptions ++= Seq("-deprecation", "-unchecked", "-release:11"),
+  crossScalaVersions := Seq(scalaVersion.value, "3.3.4"),
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "3.2.14" % Test,
+    "org.scalatest" %% "scalatest" % "3.2.19" % Test,
     "com.madgag" %% "scala-collection-plus" % "0.11" % Test
   ),
   Test/testOptions += Tests.Argument(
@@ -37,16 +30,9 @@ lazy val docs = project.in(file("line-splitting-generated-docs")) // important: 
     mdocOut := (ThisBuild / baseDirectory).value
   )
 
-import ReleaseTransformations._
-
-lazy val lineSplittingRoot = (project in file("."))
-  .aggregate(
-    lineSplitting
-  )
-  .settings(baseSettings).settings(
-  publishArtifact := false,
-  publish := {},
-  publishLocal := {},
+lazy val lineSplittingRoot = (project in file(".")).aggregate(lineSplitting).settings(
+  publish / skip := true,
+  releaseVersion := ReleaseVersion.fromAggregatedAssessedCompatibilityWithLatestRelease().value,
   releaseCrossBuild := true, // true if you cross-build the project for multiple Scala versions
   releaseProcess := Seq[ReleaseStep](
     checkSnapshotDependencies,
@@ -56,12 +42,7 @@ lazy val lineSplittingRoot = (project in file("."))
     setReleaseVersion,
     commitReleaseVersion,
     tagRelease,
-    // For non cross-build projects, use releaseStepCommand("publishSigned")
-    releaseStepCommandAndRemaining("+publishSigned"),
-    releaseStepCommand("sonatypeBundleRelease"),
     setNextVersion,
-    commitNextVersion,
-    pushChanges
+    commitNextVersion
   )
-
 )
